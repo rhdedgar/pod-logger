@@ -5,6 +5,7 @@ import (
 
 	"fmt"
 	"github.com/rhdedgar/pod-logger/models"
+	"github.com/rhdedgar/pod-logger/oapi"
 	"net/http"
 )
 
@@ -12,13 +13,13 @@ import (
 
 // POST /api/pod/log
 func PostApiPodLog(c echo.Context) error {
-	var pod models.Pod
+	var container models.Status
 
-	if err := c.Bind(&pod); err != nil {
+	if err := c.Bind(&container); err != nil {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process content"}
 	}
 
-	fmt.Println(pod.Labels.IoKubernetesPodNamespace, pod.Labels.IoKubernetesPodName)
+	go oapi.GetInfo(container)
 
 	return c.NoContent(http.StatusOK)
 }
