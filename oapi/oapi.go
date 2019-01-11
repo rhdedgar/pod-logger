@@ -3,27 +3,56 @@ package oapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/rhdedgar/pod-logger/apinamespace"
+	"github.com/rhdedgar/pod-logger/apipod"
 	"github.com/rhdedgar/pod-logger/config"
 	"github.com/rhdedgar/pod-logger/models"
 	"io/ioutil"
 	"net/http"
 )
 
-// SendData Marshals and POSTs json data to the URL designated in the config file.
-func SendData(mStat models.Status) {
-	i
-	var mLog models.Log
+// GetInfo GETs json data from the URL designated in the config file.
+func GetInfo(mStat models.Container) {
+
 	url := config.URL
-	token := config.Token
+	podNs := mStat.Status.Labels.IoKubernetesPodNamespace
+	podName := mStat.Status.Labels.IoKubernetesPodName
+
+	var podDef apipod.APIPod
+	var nsDef apinamespace.APINamespace
+
+	nsUrl := fmt.Sprintf("/api/v1/namespaces/%v", podNs)
+	podUrl := fmt.Sprintf("/api/v1/namespaces/%v/pods/%v/status", nsUrl, podName)
 
 	fmt.Println("API URL: ", url)
 
-	jsonStr, err := json.Marshal(mStat)
+	reqPod, err := http.NewRequest("GET", url+podUrl, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
+	makeClient(reqPod, &podDef)
 
-	req, err := http.NewRequest("GET", url, nil)
+	reqNs, err := http.NewRequest("GET", url+nsUrl, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	makeClient(reqNs, &nsDef)
+
+	mLog := models.Log{
+		User:      nsDef.Metadata.Annotations.OpenshiftIoRequester,
+		Namespace: podNs,
+		PodName:   podName,
+		HostIP:    podDef.Status.HostIP,
+		PodIP:     podDef.Status.PodIP,
+		StartTime: podDef.Status.StartTime,
+		UID:       nsDef.Metadata.UID,
+	}
+	fmt.Println("mLog: \n", mLog)
+}
+
+func makeClient(req *http.Request, ds interface{}) {
+	token := config.Token
+
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -33,9 +62,20 @@ func SendData(mStat models.Status) {
 	if err != nil {
 		panic(err)
 	}
+
 	defer resp.Body.Close()
 
 	// TODO Prometheus to check header response
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("response Body:", string(body))
+
+	err = json.Unmarshal(body, &ds)
+	//	jsonStr, err := json.Marshal(body)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

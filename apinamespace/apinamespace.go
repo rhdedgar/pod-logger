@@ -10,10 +10,10 @@ type Status struct {
 	Phase string `json:"phase"`
 }
 
-type APINameSpace struct {
+type APINamespace struct {
 	Kind       string   `json:"kind"`
 	APIVersion string   `json:"apiVersion"`
-	MetaData   Metadata `json:"metadata"`
+	Metadata   Metadata `json:"metadata"`
 	Spec       Spec     `json:"spec"`
 	Status     Status   `json:"status"`
 }
