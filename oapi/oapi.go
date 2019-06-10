@@ -2,12 +2,14 @@ package oapi
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/rhdedgar/pod-logger/apinamespace"
 	"github.com/rhdedgar/pod-logger/apipod"
+	"github.com/rhdedgar/pod-logger/docker"
 
 	"io/ioutil"
 	"net/http"
@@ -17,13 +19,38 @@ import (
 	"github.com/rhdedgar/pod-logger/models"
 )
 
-// GetInfo GETs json data from the URL designated in the config file.
-func GetInfo(mStat models.Container) {
-	url := config.URL
+var (
+	// APIURL is the OpenShift API URL
+	APIURL           = config.APIURL
+	defaultTransport = http.DefaultTransport.(*http.Transport)
+	// Create new Transport that ignores self-signed SSL
+	httpClientWithSelfSignedTLS = &http.Transport{
+		Proxy:                 defaultTransport.Proxy,
+		DialContext:           defaultTransport.DialContext,
+		MaxIdleConns:          defaultTransport.MaxIdleConns,
+		IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+		ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+		TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	}
+)
+
+func PrepDockerInfo(mStat docker.DockerContainer) {
+	podNs := mStat[0].Config.Labels.IoKubernetesPodNamespace
+	podName := mStat[0].Config.Labels.IoKubernetesPodName
+	fmt.Println("trying docker pod: ", podNs, podName)
+	getInfo(podNs, podName)
+}
+
+func PrepCrioInfo(mStat models.Container) {
 	podNs := mStat.Status.Labels.IoKubernetesPodNamespace
 	podName := mStat.Status.Labels.IoKubernetesPodName
+	fmt.Println("trying crio pod: ", podNs, podName)
+	getInfo(podNs, podName)
+}
 
-	fmt.Println("trying: ", podNs, podName)
+// GetInfo GETs json data from the URL designated in the config package.
+func getInfo(podNs, podName string) {
 
 	var podDef apipod.APIPod
 	var nsDef apinamespace.APINamespace
@@ -31,17 +58,17 @@ func GetInfo(mStat models.Container) {
 	nsURL := fmt.Sprintf("/api/v1/namespaces/%v", podNs)
 	podURL := fmt.Sprintf("/api/v1/namespaces/%v/pods/%v/status", podNs, podName)
 
-	fmt.Println("API URL: ", url)
-
-	reqPod, err := http.NewRequest("GET", url+podURL, nil)
+	// Marshall the pod response from the API server into the podDef struct
+	reqPod, err := http.NewRequest("GET", APIURL+podURL, nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error getting pod info: ", err)
 	}
 	makeClient(reqPod, &podDef)
 
-	reqNs, err := http.NewRequest("GET", url+nsURL, nil)
+	// Marshall the namespace response from the API server into the nsDef struct
+	reqNs, err := http.NewRequest("GET", APIURL+nsURL, nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error getting pod info: ", err)
 	}
 	makeClient(reqNs, &nsDef)
 
@@ -59,20 +86,20 @@ func GetInfo(mStat models.Container) {
 }
 
 func sendData(mlog models.Log) {
-	url := os.Getenv("LOG_WRITER_URL")
+	logURL := os.Getenv("LOG_WRITER_URL")
 
 	jsonStr, err := json.Marshal(mlog)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error marshalling json: ", err)
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", logURL, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		fmt.Println("sendData: Error making request: ", err)
 	}
 	defer resp.Body.Close()
 
@@ -90,10 +117,10 @@ func makeClient(req *http.Request, ds interface{}) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{}
+	client := &http.Client{Transport: httpClientWithSelfSignedTLS}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		fmt.Println("makeClient: Error making API request: ", err)
 	}
 
 	defer resp.Body.Close()
@@ -101,7 +128,7 @@ func makeClient(req *http.Request, ds interface{}) {
 	// TODO Prometheus to check header response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error reading response body: ", err)
 	}
 
 	fmt.Println("response Body:", string(body))

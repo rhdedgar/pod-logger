@@ -17,5 +17,6 @@ func init() {
 	Routers.Use(middleware.Logger())
 	Routers.Use(middleware.Recover())
 
-	Routers.POST("/api/pod/log", controllers.PostApiPodLog)
+	Routers.POST("/api/crio/log", controllers.PostCrioPodLog)
+	Routers.POST("/api/docker/log", controllers.PostDockerPodLog)
 }

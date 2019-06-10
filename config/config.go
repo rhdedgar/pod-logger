@@ -3,13 +3,14 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/rhdedgar/pod-logger/models"
 	"io/ioutil"
+
+	"github.com/rhdedgar/pod-logger/models"
 )
 
 var (
-	Token string
-	URL   string
+	Token  string
+	APIURL string
 )
 
 func init() {
@@ -24,9 +25,9 @@ func init() {
 
 	err = json.Unmarshal(fileBytes, &appSecrets)
 	if err != nil {
-		fmt.Println("Error Unmarshaling secrets json: ", err)
+		fmt.Println("Error Unmarshalling secrets json: ", err)
 	}
 
 	Token = appSecrets.Token
-	URL = appSecrets.URL
+	APIURL = appSecrets.APIURL
 }
