@@ -19,4 +19,5 @@ func init() {
 
 	Routers.POST("/api/crio/log", controllers.PostCrioPodLog)
 	Routers.POST("/api/docker/log", controllers.PostDockerPodLog)
+	Routers.POST("/api/clam/scanresult", controllers.PostClamScanResult)
 }
