@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/dedgarsites/dedgar/models"
 	"github.com/labstack/echo"
 
 	"fmt"
@@ -17,7 +18,7 @@ func PostCrioPodLog(c echo.Context) error {
 
 	if err := c.Bind(&container); err != nil {
 		fmt.Println("Error binding received crio data:\n", err)
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process content"}
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process crio content"}
 	}
 
 	go oapi.PrepCrioInfo(container)
@@ -31,10 +32,24 @@ func PostDockerPodLog(c echo.Context) error {
 
 	if err := c.Bind(&container); err != nil {
 		fmt.Println("Error binding received docker data:\n", err)
-		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process content"}
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process docker content"}
 	}
 
 	go oapi.PrepDockerInfo(container)
+
+	return c.NoContent(http.StatusOK)
+}
+
+// POST /api/clam/scanresult
+func PostClamScanResult(c echo.Context) error {
+	var scanResult models.scanResult
+
+	if err := c.Bind(&scanResult); err != nil {
+		fmt.Println("Error binding received scan result data:\n", err)
+		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process scan result"}
+	}
+
+	fmt.Println(scanResult)
 
 	return c.NoContent(http.StatusOK)
 }
