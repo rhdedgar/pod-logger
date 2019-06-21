@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"github.com/dedgarsites/dedgar/models"
 	"github.com/labstack/echo"
 
 	"fmt"
@@ -42,7 +41,7 @@ func PostDockerPodLog(c echo.Context) error {
 
 // POST /api/clam/scanresult
 func PostClamScanResult(c echo.Context) error {
-	var scanResult models.scanResult
+	var scanResult models.ScanResult
 
 	if err := c.Bind(&scanResult); err != nil {
 		fmt.Println("Error binding received scan result data:\n", err)
