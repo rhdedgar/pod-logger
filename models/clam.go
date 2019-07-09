@@ -10,6 +10,7 @@ type ScanResult struct {
 	NameSpace   string    `json:"nameSpace"`
 	PodName     string    `json:"podName"`
 	Results     []Results `json:"results"`
+	UserName    string    `json:"userName"`
 }
 
 type Results struct {

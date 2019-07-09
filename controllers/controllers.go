@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rhdedgar/pod-logger/clam"
 	"github.com/rhdedgar/pod-logger/docker"
 	"github.com/rhdedgar/pod-logger/models"
 	"github.com/rhdedgar/pod-logger/oapi"
@@ -48,7 +49,11 @@ func PostClamScanResult(c echo.Context) error {
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process scan result"}
 	}
 
-	fmt.Println(scanResult)
+	fmt.Println("Scan result bound to:")
+	fmt.Printf("%+v", scanResult)
+
+	go clam.CheckScanResults(scanResult)
+	go oapi.PrepClamInfo(scanResult)
 
 	return c.NoContent(http.StatusOK)
 }

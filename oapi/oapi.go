@@ -9,6 +9,7 @@ import (
 
 	"github.com/rhdedgar/pod-logger/apinamespace"
 	"github.com/rhdedgar/pod-logger/apipod"
+	"github.com/rhdedgar/pod-logger/cloud"
 	"github.com/rhdedgar/pod-logger/docker"
 
 	"io/ioutil"
@@ -21,7 +22,9 @@ import (
 
 var (
 	// APIURL is the OpenShift API URL
-	APIURL           = config.APIURL
+	APIURL           = config.AppSecrets.OAPIURL
+	token            = config.AppSecrets.OAPIToken
+	logURL           = os.Getenv("LOG_WRITER_URL")
 	defaultTransport = http.DefaultTransport.(*http.Transport)
 	// Create new Transport that ignores self-signed SSL
 	httpClientWithSelfSignedTLS = &http.Transport{
@@ -39,39 +42,81 @@ func PrepDockerInfo(mStat docker.DockerContainer) {
 	podNs := mStat[0].Config.Labels.IoKubernetesPodNamespace
 	podName := mStat[0].Config.Labels.IoKubernetesPodName
 	fmt.Println("trying docker pod: ", podNs, podName)
-	getInfo(podNs, podName)
+	podInfo, nsInfo, err := getInfo(podNs, podName)
+
+	if err != nil {
+		fmt.Println("Error getting Docker pod info:", err)
+	}
+
+	prepLog(podName, podNs, podInfo, nsInfo)
 }
 
 func PrepCrioInfo(mStat models.Container) {
 	podNs := mStat.Status.Labels.IoKubernetesPodNamespace
 	podName := mStat.Status.Labels.IoKubernetesPodName
-	fmt.Println("trying crio pod: ", podNs, podName)
-	getInfo(podNs, podName)
+	fmt.Println("trying crio pod with URL: ", APIURL, podNs, podName)
+	podInfo, nsInfo, err := getInfo(podNs, podName)
+
+	if err != nil {
+		fmt.Println("Error getting Cri-o pod info:", err)
+	}
+
+	prepLog(podName, podNs, podInfo, nsInfo)
 }
 
-// GetInfo GETs json data from the URL designated in the config package.
-func getInfo(podNs, podName string) {
+func PrepClamInfo(mStat models.ScanResult) {
+	podNs := mStat.NameSpace
+	podName := mStat.PodName
+	fmt.Println("trying clam pod: ", podNs, podName)
+	_, nsInfo, err := getInfo(podNs, podName)
 
+	if err != nil {
+		fmt.Println("Error getting clam pod info:", err)
+	}
+
+	mStat.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
+	cloud.UploadScanLog(mStat)
+}
+
+//func uploadScanLog(sLog models.ScanResult) {
+//	fmt.Println(sLog)
+//}
+
+// getInfo GETs json data from the URL designated in the config package.
+func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, error) {
 	var podDef apipod.APIPod
 	var nsDef apinamespace.APINamespace
 
 	nsURL := fmt.Sprintf("/api/v1/namespaces/%v", podNs)
 	podURL := fmt.Sprintf("/api/v1/namespaces/%v/pods/%v/status", podNs, podName)
 
+	fmt.Println("provided:", podNs, podName)
 	// Marshall the pod response from the API server into the podDef struct
 	reqPod, err := http.NewRequest("GET", APIURL+podURL, nil)
 	if err != nil {
-		fmt.Println("Error getting pod info: ", err)
+		return podDef, nsDef, fmt.Errorf("Error getting pod info: ", err)
 	}
-	makeClient(reqPod, &podDef)
+
+	err = makeClient(reqPod, &podDef)
+	if err != nil {
+		return podDef, nsDef, fmt.Errorf("Error making pod request client: ", err)
+	}
 
 	// Marshall the namespace response from the API server into the nsDef struct
 	reqNs, err := http.NewRequest("GET", APIURL+nsURL, nil)
 	if err != nil {
-		fmt.Println("Error getting pod info: ", err)
+		return podDef, nsDef, fmt.Errorf("Error getting pod info: ", err)
 	}
-	makeClient(reqNs, &nsDef)
 
+	err = makeClient(reqNs, &nsDef)
+	if err != nil {
+		return podDef, nsDef, fmt.Errorf("Error making NS request client: ", err)
+	}
+
+	return podDef, nsDef, nil
+}
+
+func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.APINamespace) {
 	mLog := models.Log{
 		User:      nsDef.Metadata.Annotations.OpenshiftIoRequester,
 		Namespace: podNs,
@@ -86,11 +131,10 @@ func getInfo(podNs, podName string) {
 }
 
 func sendData(mlog models.Log) {
-	logURL := os.Getenv("LOG_WRITER_URL")
-
 	jsonStr, err := json.Marshal(mlog)
 	if err != nil {
 		fmt.Println("Error marshalling json: ", err)
+		return
 	}
 
 	req, err := http.NewRequest("POST", logURL, bytes.NewBuffer(jsonStr))
@@ -100,27 +144,20 @@ func sendData(mlog models.Log) {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("sendData: Error making request: ", err)
+		return
 	}
 	defer resp.Body.Close()
-
-	// TODO Prometheus to check header response
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
 }
 
-func makeClient(req *http.Request, ds interface{}) {
-	token := config.Token
-
+func makeClient(req *http.Request, ds interface{}) error {
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{Transport: httpClientWithSelfSignedTLS}
+	client := &http.Client{} //Transport: httpClientWithSelfSignedTLS}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("makeClient: Error making API request: ", err)
+		return fmt.Errorf("makeClient: Error making API request: ", err)
 	}
 
 	defer resp.Body.Close()
@@ -128,14 +165,14 @@ func makeClient(req *http.Request, ds interface{}) {
 	// TODO Prometheus to check header response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response body: ", err)
+		return fmt.Errorf("makeClient: Error reading response body: ", err)
 	}
 
-	fmt.Println("response Body:", string(body))
+	//fmt.Println("response Body:", string(body))
 
 	err = json.Unmarshal(body, &ds)
 	if err != nil {
-		fmt.Println("Error Unmarshalling json returned from API: \n", err)
-		fmt.Println(ds)
+		return fmt.Errorf("makeClient: Error Unmarshalling json returned from API: \n", err)
 	}
+	return nil
 }

@@ -4,18 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/rhdedgar/pod-logger/models"
 )
 
 var (
-	Token  string
-	APIURL string
+	// AppSecrets is the populated struct of secrets needed for OpenShift and AWS API auth.
+	AppSecrets models.AppSecrets
+	// ClusterName is the name of the current OpenShift cluster. Used in clamav logs
+	ClusterName = os.Getenv("CLUSTER_NAME")
 )
 
-func init() {
-	var appSecrets models.AppSecrets
-
+// SetConfig attempts to populate the AppSecrets var with data needed to run this server.
+func SetConfig() {
 	filePath := "/secrets/api_config.json"
 	fileBytes, err := ioutil.ReadFile(filePath)
 
@@ -23,11 +25,15 @@ func init() {
 		fmt.Println("Error loading secrets json: ", err)
 	}
 
-	err = json.Unmarshal(fileBytes, &appSecrets)
+	fmt.Println("Config file contents: ", string(fileBytes))
+
+	err = json.Unmarshal(fileBytes, &AppSecrets)
 	if err != nil {
 		fmt.Println("Error Unmarshalling secrets json: ", err)
 	}
 
-	Token = appSecrets.Token
-	APIURL = appSecrets.APIURL
+	if AppSecrets.OAPIToken == "" {
+		fmt.Println("Secrets were not loaded, application will fail.")
+	}
+	fmt.Printf("%+v", AppSecrets)
 }
