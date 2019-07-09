@@ -94,18 +94,18 @@ func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, e
 	// Marshall the pod response from the API server into the podDef struct
 	reqPod, err := http.NewRequest("GET", APIURL+podURL, nil)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error getting pod info: ", err)
+		return podDef, nsDef, fmt.Errorf("Error getting pod info: %v \n", err)
 	}
 
 	err = makeClient(reqPod, &podDef)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error making pod request client: ", err)
+		return podDef, nsDef, fmt.Errorf("Error making pod request client: %v \n", err)
 	}
 
 	// Marshall the namespace response from the API server into the nsDef struct
 	reqNs, err := http.NewRequest("GET", APIURL+nsURL, nil)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error getting pod info: ", err)
+		return podDef, nsDef, fmt.Errorf("Error getting pod info: %v \n", err)
 	}
 
 	err = makeClient(reqNs, &nsDef)

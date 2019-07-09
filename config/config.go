@@ -16,8 +16,8 @@ var (
 	ClusterName = os.Getenv("CLUSTER_NAME")
 )
 
-// SetConfig attempts to populate the AppSecrets var with data needed to run this server.
-func SetConfig() {
+// init attempts to populate the AppSecrets var with data needed to run this server.
+func init() {
 	filePath := "/secrets/api_config.json"
 	fileBytes, err := ioutil.ReadFile(filePath)
 
