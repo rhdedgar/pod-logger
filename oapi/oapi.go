@@ -154,7 +154,7 @@ func makeClient(req *http.Request, ds interface{}) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{} //Transport: httpClientWithSelfSignedTLS}
+	client := &http.Client{Transport: httpClientWithSelfSignedTLS}
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("makeClient: Error making API request: ", err)
