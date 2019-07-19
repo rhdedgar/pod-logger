@@ -52,8 +52,8 @@ func PostClamScanResult(c echo.Context) error {
 	fmt.Println("Scan result bound to:")
 	fmt.Printf("%+v", scanResult)
 
-	go clam.CheckScanResults(scanResult)
 	go oapi.PrepClamInfo(scanResult)
+	go clam.CheckScanResults(scanResult)
 
 	return c.NoContent(http.StatusOK)
 }

@@ -35,5 +35,4 @@ func init() {
 	if AppSecrets.OAPIToken == "" {
 		fmt.Println("Secrets were not loaded, application will fail.")
 	}
-	//fmt.Printf("%+v", AppSecrets)
 }
