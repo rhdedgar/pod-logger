@@ -2,6 +2,7 @@ package clam
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -17,8 +18,8 @@ func CheckScanResults(scanRes models.ScanResult) {
 
 		for sig, reason := range config.AppSecrets.TDSigList {
 			if sig == result.Name {
-				fmt.Println("calling banuser here for:", scanRes.UserName, reason)
-				//banUser(scanRes.UserName, reason)
+				//fmt.Println("calling banuser here for:", scanRes.UserName, reason)
+				banUser(scanRes.UserName, reason)
 				return
 			}
 		}
@@ -27,14 +28,22 @@ func CheckScanResults(scanRes models.ScanResult) {
 
 func banUser(userName, banReason string) {
 	fmt.Println("Banning user: ", userName)
+	var newBan = models.BanAPICall{AuthUser: config.AppSecrets.TDAPIUser, IsBanned: "true", TakedownCode: banReason}
 
-	var jsonStr = []byte(`{"authorization_username":config.AppSecrets.TDAPIUser, is_banned": "true", "takedown_code": banReason}`)
-	req, err := http.NewRequest("POST", config.AppSecrets.TDAPIURL, bytes.NewBuffer(jsonStr))
+	jsonStr, err := json.Marshal(newBan)
+	if err != nil {
+		fmt.Println("Error marshalling banUser json: ", err)
+		return
+	}
+
+	req, err := http.NewRequest("POST", config.AppSecrets.TDAPIURL+userName+"/ban", bytes.NewBuffer(jsonStr))
 
 	req.Header.Set("Authorization", "Bearer "+config.AppSecrets.TDAPIToken)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("authorization_username", "application/json")
+
+	fmt.Println("BanRequest", req)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -50,5 +59,6 @@ func banUser(userName, banReason string) {
 		fmt.Println("banUser: Error reading response body: ")
 	}
 
+	fmt.Println("Successfully called ban API")
 	fmt.Println("response Body:", string(body))
 }

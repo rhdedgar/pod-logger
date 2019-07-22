@@ -25,7 +25,7 @@ func init() {
 		fmt.Println("Error loading secrets json: ", err)
 	}
 
-	fmt.Println("Config file contents: ", string(fileBytes))
+	//fmt.Println("Config file contents: ", string(fileBytes))
 
 	err = json.Unmarshal(fileBytes, &AppSecrets)
 	if err != nil {

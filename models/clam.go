@@ -20,3 +20,9 @@ type Results struct {
 	ScannerVersion string    `json:"scannerVersion"`
 	Timestamp      time.Time `json:"timestamp"`
 }
+
+type BanAPICall struct {
+	AuthUser     string `json:"authorization_username"`
+	IsBanned     string `json:"is_banned"`
+	TakedownCode string `json:"takedown_code"`
+}
