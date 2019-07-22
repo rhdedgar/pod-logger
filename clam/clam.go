@@ -17,9 +17,9 @@ func CheckScanResults(scanRes models.ScanResult) {
 		fmt.Printf("Scan result: %+v", result)
 
 		for sig, reason := range config.AppSecrets.TDSigList {
-			fmt.Printf("comparing: %v\n to %v\n", sig, result.Name)
+			fmt.Printf("comparing: %v\n to %v\n", sig, result.Description)
 			if sig == result.Name {
-				//fmt.Println("calling banuser here for:", scanRes.UserName, reason)
+				fmt.Println("calling banuser here for:", scanRes.UserName, reason)
 				banUser(scanRes.UserName, reason)
 				return
 			}
