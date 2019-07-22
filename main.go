@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Pod-logger V0.2")
+	fmt.Println("Pod-logger V0.4")
 
 	e := routers.Routers
 	e.Logger.Info(e.Start(":8080"))
