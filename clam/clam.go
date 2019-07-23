@@ -38,12 +38,12 @@ func banUser(userName, banReason string) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", config.AppSecrets.TDAPIURL+userName+"/ban", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("PUT", config.AppSecrets.TDAPIURL+userName+"/ban", bytes.NewBuffer(jsonStr))
 
 	req.Header.Set("Authorization", "Bearer "+config.AppSecrets.TDAPIToken)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("authorization_username", "application/json")
+	req.Header.Set("authorization_username", config.AppSecrets.TDAPIURL+userName)
 
 	fmt.Println("BanRequest", req)
 
