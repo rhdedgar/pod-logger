@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rhdedgar/pod-logger/clam"
 	"github.com/rhdedgar/pod-logger/docker"
 	"github.com/rhdedgar/pod-logger/models"
 	"github.com/rhdedgar/pod-logger/oapi"
@@ -53,7 +52,8 @@ func PostClamScanResult(c echo.Context) error {
 	fmt.Printf("%+v", scanResult)
 
 	go oapi.PrepClamInfo(scanResult)
-	go clam.CheckScanResults(scanResult)
+
+	//go clam.CheckScanResults(scanResult)
 
 	return c.NoContent(http.StatusOK)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/rhdedgar/pod-logger/apinamespace"
 	"github.com/rhdedgar/pod-logger/apipod"
+	"github.com/rhdedgar/pod-logger/clam"
 	"github.com/rhdedgar/pod-logger/cloud"
 	"github.com/rhdedgar/pod-logger/docker"
 
@@ -64,9 +65,9 @@ func PrepCrioInfo(mStat models.Container) {
 	prepLog(podName, podNs, podInfo, nsInfo)
 }
 
-func PrepClamInfo(mStat models.ScanResult) {
-	podNs := mStat.NameSpace
-	podName := mStat.PodName
+func PrepClamInfo(scanResult models.ScanResult) {
+	podNs := scanResult.NameSpace
+	podName := scanResult.PodName
 	fmt.Println("trying clam pod: ", podNs, podName)
 	_, nsInfo, err := getInfo(podNs, podName)
 
@@ -74,8 +75,9 @@ func PrepClamInfo(mStat models.ScanResult) {
 		fmt.Println("Error getting clam pod info:", err)
 	}
 
-	mStat.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
-	cloud.UploadScanLog(mStat)
+	scanResult.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
+	go clam.CheckScanResults(scanResult)
+	cloud.UploadScanLog(scanResult)
 }
 
 //func uploadScanLog(sLog models.ScanResult) {
@@ -110,7 +112,7 @@ func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, e
 
 	err = makeClient(reqNs, &nsDef)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error making NS request client: ", err)
+		return podDef, nsDef, fmt.Errorf("Error making NS request client: %v\n", err)
 	}
 
 	return podDef, nsDef, nil
@@ -157,7 +159,7 @@ func makeClient(req *http.Request, ds interface{}) error {
 	client := &http.Client{Transport: httpClientWithSelfSignedTLS}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("makeClient: Error making API request: ", err)
+		return fmt.Errorf("makeClient: Error making API request: %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -165,14 +167,14 @@ func makeClient(req *http.Request, ds interface{}) error {
 	// TODO Prometheus to check header response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("makeClient: Error reading response body: ", err)
+		return fmt.Errorf("makeClient: Error reading response body: %v", err)
 	}
 
 	//fmt.Println("response Body:", string(body))
 
 	err = json.Unmarshal(body, &ds)
 	if err != nil {
-		return fmt.Errorf("makeClient: Error Unmarshalling json returned from API: \n", err)
+		return fmt.Errorf("makeClient: Error Unmarshalling json returned from API: %v\n", err)
 	}
 	return nil
 }

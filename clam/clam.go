@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -18,7 +17,7 @@ func CheckScanResults(scanRes models.ScanResult) {
 		fmt.Printf("Scan result: %+v", result)
 
 		for sig, reason := range config.AppSecrets.TDSigList {
-			fmt.Printf("comparing: %v\n to %v\n", sig, result.Description)
+			//fmt.Printf("comparing: %v\n to %v\n", sig, result.Description)
 			if sig == strings.TrimSuffix(result.Description, " FOUND") {
 				fmt.Println("calling banuser here for:", scanRes.UserName, reason)
 				banUser(scanRes.UserName, reason)
@@ -56,11 +55,11 @@ func banUser(userName, banReason string) {
 	defer resp.Body.Close()
 
 	// TODO Prometheus to check header response
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("banUser: Error reading response body: ")
-	}
+	//body, err := ioutil.ReadAll(resp.Body)
+	//if err != nil {
+	//	fmt.Println("banUser: Error reading response body: ")
+	//}
 
 	fmt.Println("Successfully called ban API")
-	fmt.Println("response Body:", string(body))
+	//fmt.Println("response Body:", string(body))
 }
