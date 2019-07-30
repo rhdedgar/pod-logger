@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/rhdedgar/pod-logger/client"
 	"github.com/rhdedgar/pod-logger/config"
 	"github.com/rhdedgar/pod-logger/models"
 )
@@ -19,8 +20,12 @@ func CheckScanResults(scanRes models.ScanResult) {
 		for sig, reason := range config.AppSecrets.TDSigList {
 			//fmt.Printf("comparing: %v\n to %v\n", sig, result.Description)
 			if sig == strings.TrimSuffix(result.Description, " FOUND") {
-				fmt.Println("calling banuser here for:", scanRes.UserName, reason)
-				banUser(scanRes.UserName, reason)
+				fmt.Printf("User %v matched blacklist for %v:", scanRes.UserName, reason)
+				if strings.HasPrefix(config.ClusterName, "starter") {
+					banUser(scanRes.UserName, reason)
+					return
+				}
+				deleteNS(scanRes.NameSpace)
 				return
 			}
 		}
@@ -56,4 +61,20 @@ func banUser(userName, banReason string) {
 
 	// TODO Prometheus to check header response
 	fmt.Println("Successfully called ban API: ", resp.Status)
+}
+
+func deleteNS(ns string) {
+	var recJSON map[string]interface{}
+	fmt.Println("Deleting namespace: ", ns)
+
+	req, err := http.NewRequest("DELETE", config.AppSecrets.OAPIURL+"/apis/project.openshift.io/v1/projects/"+ns, nil)
+
+	if err != nil {
+		fmt.Println("Error creating request to delete namespace: ", err)
+	}
+
+	err = client.MakeClient(req, &recJSON)
+	if err != nil {
+		fmt.Printf("Error making delete request client: %v \n", err)
+	}
 }

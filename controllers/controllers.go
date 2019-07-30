@@ -53,7 +53,5 @@ func PostClamScanResult(c echo.Context) error {
 
 	go oapi.PrepClamInfo(scanResult)
 
-	//go clam.CheckScanResults(scanResult)
-
 	return c.NoContent(http.StatusOK)
 }
