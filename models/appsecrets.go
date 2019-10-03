@@ -12,4 +12,5 @@ type AppSecrets struct {
 	LogBucketKey    string            `json:"log_bucket_key"`
 	LogBucketName   string            `json:"log_bucket_name"`
 	LogBucketRegion string            `json:"log_bucket_region"`
+	UserWhitelist   []string          `json:"user_whitelist"`
 }

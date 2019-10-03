@@ -33,6 +33,13 @@ func CheckScanResults(scanRes models.ScanResult) {
 }
 
 func banUser(userName, banReason string) {
+	for _, excluded := range config.AppSecrets.UserWhitelist {
+		if userName == excluded {
+			fmt.Printf("NOT banning user %q\n", excluded)
+			return
+		}
+	}
+
 	fmt.Println("Banning user: ", userName)
 	var newBan = models.BanAPICall{AuthUser: config.AppSecrets.TDAPIUser, IsBanned: "true", TakedownCode: banReason}
 
@@ -64,7 +71,7 @@ func banUser(userName, banReason string) {
 }
 
 func deleteNS(ns string) {
-	var recJSON map[string]interface{}
+	recJSON := make(map[string]interface{})
 	fmt.Println("Deleting namespace: ", ns)
 
 	req, err := http.NewRequest("DELETE", config.AppSecrets.OAPIURL+"/apis/project.openshift.io/v1/projects/"+ns, nil)
