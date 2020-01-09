@@ -16,9 +16,7 @@ var (
 	ClusterName = os.Getenv("CLUSTER_NAME")
 )
 
-// init attempts to populate the AppSecrets var with data needed to run this server.
-func init() {
-	filePath := "/secrets/api_config.json"
+func loadJSON(filePath string) {
 	fileBytes, err := ioutil.ReadFile(filePath)
 
 	if err != nil {
@@ -31,6 +29,23 @@ func init() {
 	if err != nil {
 		fmt.Println("Error Unmarshalling secrets json: ", err)
 	}
+}
+
+// init attempts to populate the AppSecrets var with data needed to run this server.
+func init() {
+	filePath := "/secrets/api_config.json"
+	tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	oAPIURL := "https://openshift.default.svc.cluster.local"
+
+	loadJSON(filePath)
+	fileBytes, err := ioutil.ReadFile(tokenPath)
+
+	if err != nil {
+		fmt.Println("Error loading service account token file: ", err)
+	}
+
+	AppSecrets.OAPIURL = oAPIURL
+	AppSecrets.OAPIToken = string(fileBytes)
 
 	if AppSecrets.OAPIToken == "" {
 		fmt.Println("Secrets were not loaded, application will fail.")
