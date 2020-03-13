@@ -3,7 +3,7 @@ package cloud
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,7 +24,7 @@ func UploadScanLog(sRes models.ScanResult) {
 	filename := time.Now().Format("2006-02-01") + "/" + config.ClusterName + "/" + sRes.UserName + "/" + sRes.PodName
 	jsonStr, err := json.Marshal(sRes)
 	if err != nil {
-		fmt.Println("UploadScanLog: Error marshalling json: ", err)
+		log.Println("UploadScanLog: Error marshalling json: ", err)
 	}
 
 	file := bytes.NewReader(jsonStr)
@@ -35,6 +35,6 @@ func UploadScanLog(sRes models.ScanResult) {
 		Body:   file,
 	})
 	if err != nil {
-		fmt.Printf("Unable to upload %q to %q, %v", filename, config.AppSecrets.LogBucketName, err)
+		log.Printf("Unable to upload %q to %q, %v", filename, config.AppSecrets.LogBucketName, err)
 	}
 }

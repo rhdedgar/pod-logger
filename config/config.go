@@ -2,8 +2,8 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/rhdedgar/pod-logger/models"
@@ -20,14 +20,14 @@ func loadJSON(filePath string) {
 	fileBytes, err := ioutil.ReadFile(filePath)
 
 	if err != nil {
-		fmt.Println("Error loading secrets json: ", err)
+		log.Println("Error loading secrets json: ", err)
 	}
 
 	//fmt.Println("Config file contents: ", string(fileBytes))
 
 	err = json.Unmarshal(fileBytes, &AppSecrets)
 	if err != nil {
-		fmt.Println("Error Unmarshalling secrets json: ", err)
+		log.Println("Error Unmarshalling secrets json: ", err)
 	}
 }
 
@@ -41,13 +41,13 @@ func init() {
 	fileBytes, err := ioutil.ReadFile(tokenPath)
 
 	if err != nil {
-		fmt.Println("Error loading service account token file: ", err)
+		log.Println("Error loading service account token file: ", err)
 	}
 
 	AppSecrets.OAPIURL = oAPIURL
 	AppSecrets.OAPIToken = string(fileBytes)
 
 	if AppSecrets.OAPIToken == "" {
-		fmt.Println("Secrets were not loaded, application will fail.")
+		log.Println("Secrets were not loaded, application will fail.")
 	}
 }

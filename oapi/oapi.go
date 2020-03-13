@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/rhdedgar/pod-logger/apinamespace"
@@ -30,11 +31,12 @@ var (
 func PrepDockerInfo(mStat docker.DockerContainer) {
 	podNs := mStat[0].Config.Labels.IoKubernetesPodNamespace
 	podName := mStat[0].Config.Labels.IoKubernetesPodName
-	fmt.Println("trying docker pod: ", podNs, podName)
+
+	//fmt.Println("trying docker pod: ", podNs, podName)
 	podInfo, nsInfo, err := getInfo(podNs, podName)
 
 	if err != nil {
-		fmt.Println("Error getting Docker pod info:", err)
+		log.Println("Error getting Docker pod info:", err)
 	}
 
 	prepLog(podName, podNs, podInfo, nsInfo)
@@ -44,11 +46,12 @@ func PrepDockerInfo(mStat docker.DockerContainer) {
 func PrepCrioInfo(mStat models.Container) {
 	podNs := mStat.Status.Labels.IoKubernetesPodNamespace
 	podName := mStat.Status.Labels.IoKubernetesPodName
-	fmt.Println("trying crio pod with URL: ", APIURL, podNs, podName)
+
+	//fmt.Println("trying crio pod with URL: ", APIURL, podNs, podName)
 	podInfo, nsInfo, err := getInfo(podNs, podName)
 
 	if err != nil {
-		fmt.Println("Error getting Cri-o pod info:", err)
+		log.Println("Error getting Cri-o pod info:", err)
 	}
 
 	prepLog(podName, podNs, podInfo, nsInfo)
@@ -58,11 +61,12 @@ func PrepCrioInfo(mStat models.Container) {
 func PrepClamInfo(scanResult models.ScanResult) {
 	podNs := scanResult.NameSpace
 	podName := scanResult.PodName
-	fmt.Println("trying clam pod: ", podNs, podName)
+
+	//fmt.Println("trying clam pod: ", podNs, podName)
 	_, nsInfo, err := getInfo(podNs, podName)
 
 	if err != nil {
-		fmt.Println("Error getting clam pod info:", err)
+		log.Println("Error getting clam pod info:", err)
 	}
 
 	scanResult.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
@@ -78,7 +82,8 @@ func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, e
 	nsURL := fmt.Sprintf("/api/v1/namespaces/%v", podNs)
 	podURL := fmt.Sprintf("/api/v1/namespaces/%v/pods/%v/status", podNs, podName)
 
-	fmt.Println("provided:", podNs, podName)
+	//fmt.Println("provided:", podNs, podName)
+
 	// Marshall the pod response from the API server into the podDef struct
 	reqPod, err := http.NewRequest("GET", APIURL+podURL, nil)
 	if err != nil {
@@ -114,14 +119,14 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 		StartTime: podDef.Status.StartTime,
 		UID:       nsDef.Metadata.UID,
 	}
-	//fmt.Printf("mLog: \n %+v", mLog)
+	log.Printf("%+v", mLog)
 	sendData(mLog)
 }
 
 func sendData(mlog models.Log) {
 	jsonStr, err := json.Marshal(mlog)
 	if err != nil {
-		fmt.Println("Error marshalling json: ", err)
+		log.Println("Error marshalling json: ", err)
 		return
 	}
 
@@ -131,7 +136,7 @@ func sendData(mlog models.Log) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("sendData: Error making request: ", err)
+		log.Println("sendData: Error making request: ", err)
 		return
 	}
 	defer resp.Body.Close()

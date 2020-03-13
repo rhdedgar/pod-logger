@@ -1,14 +1,15 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/rhdedgar/pod-logger/routers"
 )
 
 func main() {
-	fmt.Println("Pod-logger V0.9.4")
+	// Pod-logger V0.9.4
 
 	e := routers.Routers
-	e.Logger.Info(e.Start(":8080"))
+	e.HideBanner = true
+	e.HidePort = true
+
+	e.Logger.Fatal(e.Start(":8080"))
 }

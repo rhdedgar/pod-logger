@@ -1,9 +1,10 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/labstack/echo"
 
-	"fmt"
 	"net/http"
 
 	"github.com/rhdedgar/pod-logger/docker"
@@ -16,7 +17,7 @@ func PostCrioPodLog(c echo.Context) error {
 	var container models.Container
 
 	if err := c.Bind(&container); err != nil {
-		fmt.Println("Error binding received crio data:\n", err)
+		log.Println("Error binding received crio data:\n", err)
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process crio content"}
 	}
 
@@ -30,7 +31,7 @@ func PostDockerPodLog(c echo.Context) error {
 	var container docker.DockerContainer
 
 	if err := c.Bind(&container); err != nil {
-		fmt.Println("Error binding received docker data:\n", err)
+		log.Println("Error binding received docker data:\n", err)
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process docker content"}
 	}
 
@@ -44,12 +45,12 @@ func PostClamScanResult(c echo.Context) error {
 	var scanResult models.ScanResult
 
 	if err := c.Bind(&scanResult); err != nil {
-		fmt.Println("Error binding received scan result data:\n", err)
+		log.Println("Error binding received scan result data:\n", err)
 		return &echo.HTTPError{Code: http.StatusBadRequest, Message: "Failed to process scan result"}
 	}
 
-	fmt.Println("Scan result bound to:")
-	fmt.Printf("%+v", scanResult)
+	//fmt.Println("Scan result bound to:")
+	log.Printf("%+v", scanResult)
 
 	go oapi.PrepClamInfo(scanResult)
 

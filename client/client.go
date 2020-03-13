@@ -45,7 +45,7 @@ func MakeClient(req *http.Request, ds interface{}) error {
 		return fmt.Errorf("makeClient: Error reading response body: %v", err)
 	}
 
-	fmt.Println("response status: ", resp.Status)
+	//fmt.Println("response status: ", resp.Status)
 	//fmt.Println("response Body:", string(body))
 
 	err = json.Unmarshal(body, &ds)
