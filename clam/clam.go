@@ -1,3 +1,7 @@
+/*
+Package clam compares positive AV signtures against a blacklist.
+Various levels of actions for blacklist matches are available (immediate ban, project deletion, etc.).
+*/
 package clam
 
 import (

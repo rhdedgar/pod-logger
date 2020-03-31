@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"log"
+	"sync"
 
 	"github.com/labstack/echo"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/rhdedgar/pod-logger/models"
 	"github.com/rhdedgar/pod-logger/oapi"
 )
+
+var logSync sync.Mutex
 
 // POST /api/crio/log
 func PostCrioPodLog(c echo.Context) error {
@@ -52,7 +55,7 @@ func PostClamScanResult(c echo.Context) error {
 	//fmt.Println("Scan result bound to:")
 	log.Printf("%+v", scanResult)
 
-	go oapi.PrepClamInfo(scanResult)
+	go oapi.PrepClamInfo(scanResult, &logSync)
 
 	return c.NoContent(http.StatusOK)
 }

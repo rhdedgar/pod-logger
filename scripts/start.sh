@@ -12,10 +12,4 @@ if [ "$OO_PAUSE_ON_START" = "true" ] ; then
   done
 fi
 
-echo This container hosts the following applications:
-echo
-echo '/usr/bin/pod-logger'
-echo
-echo 'Always listen for pod logs from watcher pods.'
-echo '----------------'
 /bin/pod-logger

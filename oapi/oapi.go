@@ -1,3 +1,7 @@
+/*
+Package oapi provides functions to gather, format, and log information
+about new pods and scan results.
+*/
 package oapi
 
 import (
@@ -6,12 +10,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/rhdedgar/pod-logger/apinamespace"
 	"github.com/rhdedgar/pod-logger/apipod"
 	"github.com/rhdedgar/pod-logger/clam"
 	"github.com/rhdedgar/pod-logger/client"
-	"github.com/rhdedgar/pod-logger/cloud"
 	"github.com/rhdedgar/pod-logger/docker"
 
 	"net/http"
@@ -22,9 +26,12 @@ import (
 )
 
 var (
-	// APIURL is the OpenShift API URL
+	// APIURL is the OpenShift API URL.
 	APIURL = config.AppSecrets.OAPIURL
+	// logURL is th URL used by sendData to POST scan.Logs as JSON.
 	logURL = os.Getenv("LOG_WRITER_URL")
+	// scanLog is the file path that splunk-forwarder-operator is configured to read.
+	scanLog = os.Getenv("SCAN_LOG_FILE")
 )
 
 // PrepDockerInfo gathers information about a user before sending it off to the logging service.
@@ -57,12 +64,11 @@ func PrepCrioInfo(mStat models.Container) {
 	prepLog(podName, podNs, podInfo, nsInfo)
 }
 
-// PrepClamInfo gathers information about a user before sending off to the scan result bucket.
-func PrepClamInfo(scanResult models.ScanResult) {
+// PrepClamInfo gathers information about a user before logging the scan result.
+func PrepClamInfo(scanResult models.ScanResult, mx *sync.Mutex) {
 	podNs := scanResult.NameSpace
 	podName := scanResult.PodName
 
-	//fmt.Println("trying clam pod: ", podNs, podName)
 	_, nsInfo, err := getInfo(podNs, podName)
 
 	if err != nil {
@@ -70,7 +76,17 @@ func PrepClamInfo(scanResult models.ScanResult) {
 	}
 
 	scanResult.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
-	go cloud.UploadScanLog(scanResult)
+	//go cloud.UploadScanLog(scanResult)
+
+	mx.Lock()
+	defer mx.Unlock()
+
+	f, err := os.OpenFile(scanLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
+	if err != nil {
+		log.Printf("error opening file: %v", err)
+	}
+	defer f.Close()
+
 	clam.CheckScanResults(scanResult)
 }
 
@@ -109,6 +125,8 @@ func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, e
 	return podDef, nsDef, nil
 }
 
+// prepLog neatly formats relevant pod, project, and user data as a models.Log.
+// Then prints it for splunk pickup.
 func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.APINamespace) {
 	mLog := models.Log{
 		User:      nsDef.Metadata.Annotations.OpenshiftIoRequester,
@@ -120,9 +138,9 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 		UID:       nsDef.Metadata.UID,
 	}
 	log.Printf("%+v", mLog)
-	sendData(mLog)
 }
 
+// sendData POSTS a models.Log as JSON to logURL
 func sendData(mlog models.Log) {
 	jsonStr, err := json.Marshal(mlog)
 	if err != nil {
