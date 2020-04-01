@@ -15,6 +15,7 @@ RUN go get github.com/rhdedgar/pod-logger && \
     cd /go/src/github.com/rhdedgar/pod-logger && \
     go install && \
     cd && \
+    mkdir -p /host/var/log && \
     rm -rf /go
 
 EXPOSE 8080

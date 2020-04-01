@@ -5,11 +5,11 @@ import (
 )
 
 func main() {
-	// Pod-logger V0.0.5
+	// Pod-logger V0.0.6
 
 	e := routers.Routers
 	e.HideBanner = true
 	e.HidePort = true
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Start(":8080")
 }
