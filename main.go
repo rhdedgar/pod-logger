@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+
+	"github.com/labstack/echo/middleware"
 	"github.com/rhdedgar/pod-logger/routers"
 )
 
@@ -11,5 +14,10 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 
-	e.Start(":8080")
+	if os.Getenv("DEBUG_APP") == "true" {
+		e.Use(middleware.Logger())
+		e.Logger.Info(e.Start(":8080"))
+	} else {
+		e.Start(":8080")
+	}
 }
