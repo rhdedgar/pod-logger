@@ -93,6 +93,7 @@ func PrepClamInfo(scanResult models.ScanResult, mx *sync.Mutex) {
 	}
 
 	f.Write(jBytes)
+	f.WriteString("\n")
 
 	clam.CheckScanResults(scanResult)
 }
