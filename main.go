@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// Pod-logger V0.0.6
+	// Pod-logger V0.0.7
 
 	e := routers.Routers
 	e.HideBanner = true

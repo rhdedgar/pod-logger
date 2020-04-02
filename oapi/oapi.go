@@ -87,6 +87,13 @@ func PrepClamInfo(scanResult models.ScanResult, mx *sync.Mutex) {
 	}
 	defer f.Close()
 
+	jBytes, err := json.Marshal(scanResult)
+	if err != nil {
+		log.Println("Error marshaling scan result to write to disk:", err)
+	}
+
+	f.Write(jBytes)
+
 	clam.CheckScanResults(scanResult)
 }
 
