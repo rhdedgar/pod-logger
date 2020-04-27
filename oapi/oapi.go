@@ -30,8 +30,12 @@ var (
 	APIURL = config.AppSecrets.OAPIURL
 	// logURL is th URL used by sendData to POST scan.Logs as JSON.
 	logURL = os.Getenv("LOG_WRITER_URL")
-	// scanLog is the file path that splunk-forwarder-operator is configured to read.
-	scanLog = os.Getenv("SCAN_LOG_FILE")
+	// scanLogFile is the scan log file path that splunk-forwarder-operator is configured to read.
+	scanLogFile = os.Getenv("SCAN_LOG_FILE")
+	// podLogFile is the pod creation log file path that splunk-forwarder-operator is configured to read.
+	podLogFile = os.Getenv("POD_LOG_FILE")
+	// scanLogMX and podLogMX are the mutexes for the scan and pod creation log files.
+	scanLogMX, podLogMX sync.Mutex
 )
 
 // PrepDockerInfo gathers information about a user before sending it off to the logging service.
@@ -65,7 +69,7 @@ func PrepCrioInfo(mStat models.Container) {
 }
 
 // PrepClamInfo gathers information about a user before logging the scan result.
-func PrepClamInfo(scanResult models.ScanResult, mx *sync.Mutex) {
+func PrepClamInfo(scanResult models.ScanResult) {
 	podNs := scanResult.NameSpace
 	podName := scanResult.PodName
 
@@ -78,10 +82,10 @@ func PrepClamInfo(scanResult models.ScanResult, mx *sync.Mutex) {
 	scanResult.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
 	//go cloud.UploadScanLog(scanResult)
 
-	mx.Lock()
-	defer mx.Unlock()
+	scanLogMX.Lock()
+	defer scanLogMX.Unlock()
 
-	f, err := os.OpenFile(scanLog, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
+	f, err := os.OpenFile(scanLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
 	if err != nil {
 		log.Printf("error opening file: %v", err)
 	}
@@ -146,6 +150,23 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 		UID:       nsDef.Metadata.UID,
 	}
 	log.Printf("%+v", mLog)
+
+	podLogMX.Lock()
+	defer podLogMX.Unlock()
+
+	f, err := os.OpenFile(podLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
+	if err != nil {
+		log.Printf("error opening file: %v", err)
+	}
+	defer f.Close()
+
+	jBytes, err := json.Marshal(mLog)
+	if err != nil {
+		log.Println("Error marshaling pod log to write to disk:", err)
+	}
+
+	f.Write(jBytes)
+	f.WriteString("\n")
 }
 
 // sendData POSTS a models.Log as JSON to logURL
