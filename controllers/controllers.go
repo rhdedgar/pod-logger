@@ -12,6 +12,7 @@ import (
 	"github.com/rhdedgar/pod-logger/oapi"
 )
 
+// PostCrioPodLog handles received crictl inspect data in json format. It's accessed with:
 // POST /api/crio/log
 func PostCrioPodLog(c echo.Context) error {
 	var container models.Container
@@ -26,6 +27,7 @@ func PostCrioPodLog(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// PostDockerPodLog handles received docker inspect data in json format. It's accessed with:
 // POST /api/docker/log
 func PostDockerPodLog(c echo.Context) error {
 	var container docker.DockerContainer
@@ -40,6 +42,7 @@ func PostDockerPodLog(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// PostClamScanResult handles received clamAV scan result data in json format. It's accessed with:
 // POST /api/clam/scanresult
 func PostClamScanResult(c echo.Context) error {
 	var scanResult models.ScanResult

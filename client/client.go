@@ -12,7 +12,7 @@ import (
 
 var (
 	defaultTransport = http.DefaultTransport.(*http.Transport)
-	// Create new Transport that ignores self-signed SSL
+	// Create new Transport that accommodates self-signed SSL
 	httpClientWithSelfSignedTLS = &http.Transport{
 		Proxy:                 defaultTransport.Proxy,
 		DialContext:           defaultTransport.DialContext,
