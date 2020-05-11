@@ -1,0 +1,12 @@
+mode: atomic
+github.com/rhdedgar/pod-logger/config/config.go:21.54,25.16 3 2
+github.com/rhdedgar/pod-logger/config/config.go:30.2,31.16 2 1
+github.com/rhdedgar/pod-logger/config/config.go:35.2,35.12 1 1
+github.com/rhdedgar/pod-logger/config/config.go:25.16,28.3 2 1
+github.com/rhdedgar/pod-logger/config/config.go:31.16,34.3 2 0
+github.com/rhdedgar/pod-logger/config/config.go:39.13,45.16 5 1
+github.com/rhdedgar/pod-logger/config/config.go:49.2,50.16 2 1
+github.com/rhdedgar/pod-logger/config/config.go:54.2,57.32 3 1
+github.com/rhdedgar/pod-logger/config/config.go:45.16,47.3 1 1
+github.com/rhdedgar/pod-logger/config/config.go:50.16,52.3 1 1
+github.com/rhdedgar/pod-logger/config/config.go:57.32,59.3 1 1

@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,19 +17,22 @@ var (
 	ClusterName = os.Getenv("CLUSTER_NAME")
 )
 
-func loadJSON(filePath string) {
+// LoadJSON reads a file at filePath, and Unmarshals the contents into the provided data structure pointer.
+func LoadJSON(ds interface{}, filePath string) error {
 	fileBytes, err := ioutil.ReadFile(filePath)
+	fmt.Println("Config file contents: ", string(fileBytes))
 
 	if err != nil {
 		log.Println("Error loading secrets json: ", err)
+		return err
 	}
 
-	//fmt.Println("Config file contents: ", string(fileBytes))
-
-	err = json.Unmarshal(fileBytes, &AppSecrets)
+	err = json.Unmarshal(fileBytes, ds)
 	if err != nil {
 		log.Println("Error Unmarshalling secrets json: ", err)
+		return err
 	}
+	return nil
 }
 
 // init attempts to populate the AppSecrets var with data needed to run this server.
@@ -37,9 +41,12 @@ func init() {
 	tokenPath := "/var/run/secrets/kubernetes.io/serviceaccount/token"
 	oAPIURL := "https://openshift.default.svc.cluster.local"
 
-	loadJSON(filePath)
-	fileBytes, err := ioutil.ReadFile(tokenPath)
+	err := LoadJSON(AppSecrets, filePath)
+	if err != nil {
+		log.Println("Cannot load AppSecrets JSON:")
+	}
 
+	fileBytes, err := ioutil.ReadFile(tokenPath)
 	if err != nil {
 		log.Println("Error loading service account token file: ", err)
 	}
