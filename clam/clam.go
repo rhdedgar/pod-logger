@@ -27,21 +27,22 @@ func CheckScanResults(scanRes models.ScanResult) {
 			if sig == strings.TrimSuffix(result.Description, " FOUND") {
 				log.Printf("User %v matched blacklist for %v:", scanRes.UserName, reason)
 				if strings.HasPrefix(config.ClusterName, "starter") {
-					banUser(scanRes.UserName, reason)
+					BanUser(scanRes.UserName, reason)
 					return
 				}
-				deleteNS(scanRes.NameSpace)
+				DeleteNS(scanRes.NameSpace)
 				return
 			}
 		}
 	}
 }
 
-func banUser(userName, banReason string) {
+// BanUser bans the provided user via takedown API call for the specified reason.
+func BanUser(userName, banReason string) (int, error) {
 	for _, excluded := range config.AppSecrets.UserWhitelist {
 		if userName == excluded {
 			//fmt.Printf("NOT banning user %q\n", excluded)
-			return
+			return 200, nil
 		}
 	}
 
@@ -51,10 +52,14 @@ func banUser(userName, banReason string) {
 	jsonStr, err := json.Marshal(newBan)
 	if err != nil {
 		log.Println("Error marshalling banUser json: ", err)
-		return
+		return 0, err
 	}
 
 	req, err := http.NewRequest("PUT", config.AppSecrets.TDAPIURL+userName+"/ban", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		log.Println("Error creating request to ban user: ", err)
+		return 0, err
+	}
 
 	req.Header.Set("Authorization", "Bearer "+config.AppSecrets.TDAPIToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -67,15 +72,17 @@ func banUser(userName, banReason string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println("banUser: Error making API request: ")
+		return 0, err
 	}
 
 	defer resp.Body.Close()
 
-	// TODO Prometheus to check header response
 	log.Println("Successfully called ban API: ", resp.Status)
+	return resp.StatusCode, nil
 }
 
-func deleteNS(ns string) {
+// DeleteNS takes a string name of the namespace to delete via OpenShift API call.
+func DeleteNS(ns string) (int, error) {
 	recJSON := make(map[string]interface{})
 	log.Println("Deleting namespace: ", ns)
 
@@ -83,10 +90,13 @@ func deleteNS(ns string) {
 
 	if err != nil {
 		log.Println("Error creating request to delete namespace: ", err)
+		return 0, err
 	}
 
-	err = client.MakeClient(req, &recJSON)
+	status, err := client.MakeClient(req, &recJSON)
 	if err != nil {
 		log.Printf("Error making delete request client: %v \n", err)
+		return 0, err
 	}
+	return status, nil
 }

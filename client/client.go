@@ -26,7 +26,7 @@ var (
 
 // MakeClient takes an HTTP request and a destination struct to store the json results.
 // Uses a custom HTTP transport to accommodate OpenShift clusters with self-signed certificates.
-func MakeClient(req *http.Request, ds interface{}) error {
+func MakeClient(req *http.Request, ds interface{}) (int, error) {
 	req.Header.Set("Authorization", "Bearer "+config.AppSecrets.OAPIToken)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -34,15 +34,14 @@ func MakeClient(req *http.Request, ds interface{}) error {
 	client := &http.Client{Transport: httpClientWithSelfSignedTLS}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("makeClient: Error making API request: %v", err)
+		return 0, fmt.Errorf("makeClient: Error making API request: %v", err)
 	}
-
 	defer resp.Body.Close()
 
 	// TODO Prometheus to check header response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("makeClient: Error reading response body: %v", err)
+		return 0, fmt.Errorf("makeClient: Error reading response body: %v", err)
 	}
 
 	//fmt.Println("response status: ", resp.Status)
@@ -50,7 +49,7 @@ func MakeClient(req *http.Request, ds interface{}) error {
 
 	err = json.Unmarshal(body, &ds)
 	if err != nil {
-		return fmt.Errorf("makeClient: Error Unmarshalling json returned from API: %v\n", err)
+		return 0, fmt.Errorf("makeClient: Error Unmarshalling json returned from API: %v\n", err)
 	}
-	return nil
+	return resp.StatusCode, nil
 }

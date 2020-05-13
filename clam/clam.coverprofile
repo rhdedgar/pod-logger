@@ -1,0 +1,22 @@
+mode: atomic
+github.com/rhdedgar/pod-logger/clam/clam.go:20.50,22.41 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:22.41,25.56 1 0
+github.com/rhdedgar/pod-logger/clam/clam.go:25.56,27.63 1 0
+github.com/rhdedgar/pod-logger/clam/clam.go:27.63,29.57 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:33.5,34.11 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:29.57,32.6 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:41.55,42.59 1 1
+github.com/rhdedgar/pod-logger/clam/clam.go:49.2,53.16 4 1
+github.com/rhdedgar/pod-logger/clam/clam.go:58.2,59.16 2 1
+github.com/rhdedgar/pod-logger/clam/clam.go:64.2,73.16 7 1
+github.com/rhdedgar/pod-logger/clam/clam.go:78.2,81.29 3 1
+github.com/rhdedgar/pod-logger/clam/clam.go:42.59,43.27 1 0
+github.com/rhdedgar/pod-logger/clam/clam.go:43.27,46.4 1 0
+github.com/rhdedgar/pod-logger/clam/clam.go:53.16,56.3 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:59.16,62.3 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:73.16,76.3 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:85.39,91.16 4 1
+github.com/rhdedgar/pod-logger/clam/clam.go:96.2,97.16 2 1
+github.com/rhdedgar/pod-logger/clam/clam.go:101.2,101.20 1 1
+github.com/rhdedgar/pod-logger/clam/clam.go:91.16,94.3 2 0
+github.com/rhdedgar/pod-logger/clam/clam.go:97.16,100.3 2 0

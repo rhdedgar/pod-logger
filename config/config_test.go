@@ -14,7 +14,7 @@ var _ = Describe("Config", func() {
 		configFilePath = "./api_config_example.json"
 	)
 
-	Describe("loadJSON", func() {
+	Describe("LoadJSON", func() {
 		Context("Valid JSON read from api_config_example.json file", func() {
 			It("Should Unmarshal into type models.AppSecrets", func() {
 				err := LoadJSON(&appSecrets, configFilePath)
