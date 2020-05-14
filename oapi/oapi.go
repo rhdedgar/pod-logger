@@ -169,22 +169,28 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 	f.WriteString("\n")
 }
 
-// sendData POSTS a models.Log as JSON to config.LogURL
-func sendData(mlog models.Log) {
+// SendData POSTS a models.Log as JSON to config.LogURL
+func SendData(mlog models.Log) (int, error) {
 	jsonStr, err := json.Marshal(mlog)
 	if err != nil {
-		log.Println("Error marshalling json: ", err)
-		return
+		log.Println("SendData: Error marshalling json: ", err)
+		return 0, err
 	}
 
 	req, err := http.NewRequest("POST", config.LogURL, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		log.Println("SendData: Error making HTTP request:", err)
+		return 0, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("sendData: Error making request: ", err)
-		return
+		log.Println("SendData: Error making request: ", err)
+		return 0, err
 	}
 	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
 }
