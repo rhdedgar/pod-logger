@@ -26,14 +26,14 @@ import (
 )
 
 var (
-	// APIURL is the OpenShift API URL.
-	APIURL = config.AppSecrets.OAPIURL
-	// logURL is th URL used by sendData to POST scan.Logs as JSON.
-	logURL = os.Getenv("LOG_WRITER_URL")
-	// scanLogFile is the scan log file path that splunk-forwarder-operator is configured to read.
-	scanLogFile = os.Getenv("SCAN_LOG_FILE")
-	// podLogFile is the pod creation log file path that splunk-forwarder-operator is configured to read.
-	podLogFile = os.Getenv("POD_LOG_FILE")
+	// config.AppSecrets.OAPIURL is the OpenShift API URL.
+	//APIURL = config.AppSecrets.Oconfig.AppSecrets.OAPIURL
+	// config.LogURL is the URL used by sendData to POST scan.Logs as JSON.
+	//logURL = config.config.LogURL
+	// config.ScanLogFile is the scan log file path that splunk-forwarder-operator is configured to read.
+	//scanLogFile = config.config.ScanLogFile
+	// config.PodLogFile is the pod creation log file path that splunk-forwarder-operator is configured to read.
+	//podLogFile = config.config.PodLogFile
 	// scanLogMX and podLogMX are the mutexes for the scan and pod creation log files.
 	scanLogMX, podLogMX sync.Mutex
 )
@@ -44,7 +44,7 @@ func PrepDockerInfo(mStat docker.DockerContainer) {
 	podName := mStat[0].Config.Labels.IoKubernetesPodName
 
 	//fmt.Println("trying docker pod: ", podNs, podName)
-	podInfo, nsInfo, err := getInfo(podNs, podName)
+	nsInfo, podInfo, err := GetInfo(podNs, podName)
 
 	if err != nil {
 		log.Println("Error getting Docker pod info:", err)
@@ -58,8 +58,8 @@ func PrepCrioInfo(mStat models.Container) {
 	podNs := mStat.Status.Labels.IoKubernetesPodNamespace
 	podName := mStat.Status.Labels.IoKubernetesPodName
 
-	//fmt.Println("trying crio pod with URL: ", APIURL, podNs, podName)
-	podInfo, nsInfo, err := getInfo(podNs, podName)
+	//fmt.Println("trying crio pod with URL: ", config.AppSecrets.OAPIURL, podNs, podName)
+	nsInfo, podInfo, err := GetInfo(podNs, podName)
 
 	if err != nil {
 		log.Println("Error getting Cri-o pod info:", err)
@@ -73,7 +73,7 @@ func PrepClamInfo(scanResult models.ScanResult) {
 	podNs := scanResult.NameSpace
 	podName := scanResult.PodName
 
-	_, nsInfo, err := getInfo(podNs, podName)
+	nsInfo, _, err := GetInfo(podNs, podName)
 
 	if err != nil {
 		log.Println("Error getting clam pod info:", err)
@@ -85,7 +85,7 @@ func PrepClamInfo(scanResult models.ScanResult) {
 	scanLogMX.Lock()
 	defer scanLogMX.Unlock()
 
-	f, err := os.OpenFile(scanLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
+	f, err := os.OpenFile(config.ScanLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
 	if err != nil {
 		log.Printf("error opening file: %v", err)
 	}
@@ -102,8 +102,8 @@ func PrepClamInfo(scanResult models.ScanResult) {
 	clam.CheckScanResults(scanResult)
 }
 
-// getInfo GETs json data from the URL designated in the config package.
-func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, error) {
+// GetInfo GETs json data from the URL designated in the config package.
+func GetInfo(podNs, podName string) (apinamespace.APINamespace, apipod.APIPod, error) {
 	var podDef apipod.APIPod
 	var nsDef apinamespace.APINamespace
 
@@ -112,29 +112,29 @@ func getInfo(podNs, podName string) (apipod.APIPod, apinamespace.APINamespace, e
 
 	//fmt.Println("provided:", podNs, podName)
 
-	// Marshall the pod response from the API server into the podDef struct
-	reqPod, err := http.NewRequest("GET", APIURL+podURL, nil)
+	// Marshal the pod response from the API server into the podDef struct
+	reqPod, err := http.NewRequest("GET", config.AppSecrets.OAPIURL+podURL, nil)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error getting pod info: %v \n", err)
+		return nsDef, podDef, fmt.Errorf("Error getting pod info: %v \n", err)
 	}
 
-	err = client.MakeClient(reqPod, &podDef)
+	_, err = client.MakeClient(reqPod, &podDef)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error making pod request client: %v \n", err)
+		return nsDef, podDef, fmt.Errorf("Error making pod request client: %v \n", err)
 	}
 
 	// Marshall the namespace response from the API server into the nsDef struct
-	reqNs, err := http.NewRequest("GET", APIURL+nsURL, nil)
+	reqNs, err := http.NewRequest("GET", config.AppSecrets.OAPIURL+nsURL, nil)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error getting pod info: %v \n", err)
+		return nsDef, podDef, fmt.Errorf("Error getting pod info: %v \n", err)
 	}
 
-	err = client.MakeClient(reqNs, &nsDef)
+	_, err = client.MakeClient(reqNs, &nsDef)
 	if err != nil {
-		return podDef, nsDef, fmt.Errorf("Error making NS request client: %v\n", err)
+		return nsDef, podDef, fmt.Errorf("Error making NS request client: %v\n", err)
 	}
 
-	return podDef, nsDef, nil
+	return nsDef, podDef, nil
 }
 
 // prepLog neatly formats relevant pod, project, and user data as a models.Log.
@@ -154,7 +154,7 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 	podLogMX.Lock()
 	defer podLogMX.Unlock()
 
-	f, err := os.OpenFile(podLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
+	f, err := os.OpenFile(config.PodLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0655)
 	if err != nil {
 		log.Printf("error opening file: %v", err)
 	}
@@ -169,7 +169,7 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 	f.WriteString("\n")
 }
 
-// sendData POSTS a models.Log as JSON to logURL
+// sendData POSTS a models.Log as JSON to config.LogURL
 func sendData(mlog models.Log) {
 	jsonStr, err := json.Marshal(mlog)
 	if err != nil {
@@ -177,7 +177,7 @@ func sendData(mlog models.Log) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", logURL, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", config.LogURL, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

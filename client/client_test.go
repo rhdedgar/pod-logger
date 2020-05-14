@@ -51,7 +51,6 @@ var _ = Describe("Client", func() {
 		Context("Successful client creation and response from server", func() {
 			It("Should return HTTP status code 200 with no errors", func() {
 				recJSON := make(map[string]interface{})
-				//log.Println("Test using a client to call an API: ", targetAPI)
 
 				req, err := http.NewRequest("POST", targetAPI, nil)
 				Expect(err).To(BeNil())

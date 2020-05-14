@@ -19,6 +19,12 @@ type clientJSON struct {
 }
 
 var _ = Describe("Clam", func() {
+	config.AppSecrets.OAPIURL = "http://localhost:8080"
+	config.AppSecrets.OAPIToken = "exampletdapitoken"
+	config.AppSecrets.TDAPIURL = "http://localhost:8080/api/url/"
+	config.AppSecrets.TDAPIUser = "exampletdapiuser"
+	config.AppSecrets.TDAPIToken = "exampletdapitoken"
+
 	var (
 		testNS   = "namespacetodelete"
 		testUser = "usertoban"
@@ -40,11 +46,6 @@ var _ = Describe("Clam", func() {
 
 			e.Logger.Info(e.Start(":8080"))
 		}()
-		config.AppSecrets.OAPIURL = "http://localhost:8080"
-		config.AppSecrets.OAPIToken = "exampletdapitoken"
-		config.AppSecrets.TDAPIURL = "http://localhost:8080/api/url/"
-		config.AppSecrets.TDAPIUser = "exampletdapiuser"
-		config.AppSecrets.TDAPIToken = "exampletdapitoken"
 	})
 
 	AfterEach(func() {
