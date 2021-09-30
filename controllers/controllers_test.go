@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	//. "github.com/rhdedgar/pod-logger/controllers"
 	"github.com/rhdedgar/pod-logger/controllers"
 	"github.com/rhdedgar/pod-logger/docker"
 	"github.com/rhdedgar/pod-logger/models"
