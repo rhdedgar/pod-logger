@@ -16,17 +16,33 @@ limitations under the License.
 
 package models
 
-// AppSecrets represents the secret data from the json secrets file. It's needed for OpenShift and AWS API calls
+// AppSecrets represents the secret data from the json secrets file. It's needed for various OpenShift and Cloud Provider API calls
 type AppSecrets struct {
-	OAPIToken       string            `json:"oapi_token"`
-	OAPIURL         string            `json:"oapi_url"`
-	TDAPIToken      string            `json:"td_api_token"`
-	TDAPIURL        string            `json:"td_api_url"`
-	TDAPIUser       string            `json:"td_api_user"`
-	TDSigList       map[string]string `json:"td_sig_list"`
-	LogBucketKeyID  string            `json:"log_bucket_key_id"`
-	LogBucketKey    string            `json:"log_bucket_key"`
-	LogBucketName   string            `json:"log_bucket_name"`
-	LogBucketRegion string            `json:"log_bucket_region"`
-	UserWhitelist   []string          `json:"user_whitelist"`
+	// OAPIToken is the token used with the OpenShift API to gather metadata on a pod.
+	// Usually obtained from /var/run/secrets/kubernetes.io/serviceaccount/token
+	OAPIToken string `json:"oapi_token"`
+	// OAPIURL is the OpenShift API URL used for the cluster.
+	OAPIURL string `json:"oapi_url"`
+	// TDAPIToken is the token to be used with the optional TakeDown API.
+	TDAPIToken string `json:"td_api_token"`
+	// TDAPIURL is the API URL endpoint of the optional TakeDown API.
+	TDAPIURL string `json:"td_api_url"`
+	// TDAPIUser is the username to be used with the optional TakeDown API.
+	TDAPIUser string `json:"td_api_user"`
+	// TDSigList is a curated list of signatures that warrant immediate takedown.
+	// Usually used with custom signatures in which we have a high degree of confidence to only match malicious code.
+	TDSigList map[string]string `json:"td_sig_list"`
+	// LogBucketKeyID is the cloud provider key ID for the signature storage medium.
+	LogBucketKeyID string `json:"log_bucket_key_id"`
+	// LogBucketKey is the cloud provider secret key for the signature storage medium.
+	LogBucketKey string `json:"log_bucket_key"`
+	// LogBucketName is the name of the cloud provider signature storage medium.
+	LogBucketName string `json:"log_bucket_name"`
+	// LogBucketRegion is the region of the cloud provider signature storage medium.
+	LogBucketRegion string `json:"log_bucket_region"`
+	// UserWhitelist is a list of users whose pods are exempted from scans.
+	UserWhitelist []string `json:"user_whitelist"`
+	// ClusterID matches the clusterID field of our clusterversion object. Useful for identification in multi-cluster setups.
+	// oc get clusterversion -o jsonpath='{.items[].spec.clusterID}{"\n"}'
+	ClusterID string `json:"cluster_id"`
 }

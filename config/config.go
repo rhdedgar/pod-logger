@@ -21,16 +21,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
+	"github.com/openshift/pod-logger/config"
+	"github.com/rhdedgar/pod-logger/client"
 	"github.com/rhdedgar/pod-logger/models"
 )
 
 var (
 	// AppSecrets is the populated struct of secrets needed for OpenShift and AWS API auth.
 	AppSecrets models.AppSecrets
-	// ClusterName is the name of the current OpenShift cluster. Used in clamav logs
-	ClusterName = os.Getenv("CLUSTER_NAME")
+	// ClusterUUID is the UUID of the current OpenShift cluster. Used for scan and pod creation logs
+	ClusterUUID = os.Getenv("CLUSTER_NAME")
 	// LogURL is the URL used by sendData to POST scan.Logs as JSON.
 	LogURL = os.Getenv("LOG_WRITER_URL")
 	// ScanLogFile is the scan log file path that splunk-forwarder-operator is configured to read.
@@ -42,16 +45,16 @@ var (
 // LoadJSON reads a file at filePath, and Unmarshals the contents into the provided data structure pointer.
 func LoadJSON(ds interface{}, filePath string) error {
 	fileBytes, err := ioutil.ReadFile(filePath)
-	fmt.Println("Config file contents: ", string(fileBytes))
+	//fmt.Println("Config file contents: ", string(fileBytes))
 
 	if err != nil {
-		log.Println("Error loading secrets json: ", err)
+		log.Println("Error loading AppSecrets json")
 		return err
 	}
 
 	err = json.Unmarshal(fileBytes, ds)
 	if err != nil {
-		log.Println("Error Unmarshalling secrets json: ", err)
+		log.Println("Error Unmarshalling secrets json")
 		return err
 	}
 	return nil
@@ -66,6 +69,12 @@ func init() {
 	err := LoadJSON(AppSecrets, filePath)
 	if err != nil {
 		log.Println("Cannot load AppSecrets JSON:")
+		log.Println(err)
+	}
+
+	err = GetClusterID()
+	if err != nil {
+		log.Println(err)
 	}
 
 	fileBytes, err := ioutil.ReadFile(tokenPath)
@@ -79,4 +88,28 @@ func init() {
 	if AppSecrets.OAPIToken == "" {
 		log.Println("Secrets were not loaded, application will fail.")
 	}
+
+}
+
+// getClusterID GETs the ID of the cluster from the OpenShift API.
+func GetClusterID() error {
+	// oc get clusterversion -o jsonpath='{.items[].spec.clusterID}{"\n"}'
+	cvURL := fmt.Sprintf("/apis/config.openshift.io/v1/clusterversions")
+	cvDef := models.ClusterVersion{}
+
+	// Marshal the clusterversion response from the API server into the cv struct
+	reqCV, err := http.NewRequest("GET", config.AppSecrets.OAPIURL+cvURL, nil)
+	if err != nil {
+		return fmt.Errorf("Error getting clusterversion info: %v \n", err)
+	}
+
+	_, err = client.MakeClient(reqCV, &cvDef)
+	if err != nil {
+		return fmt.Errorf("Error making pod request client: %v \n", err)
+	}
+	if len(cvDef.Items) > 0 {
+		ClusterUUID = cvDef.Items[0].Spec.ClusterID
+		return nil
+	}
+	return fmt.Errorf("Error getting ClusterVersion info from the OAPI server URL, cvDef.Items len was 0")
 }

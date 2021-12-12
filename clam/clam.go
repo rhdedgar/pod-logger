@@ -42,7 +42,7 @@ func CheckScanResults(scanRes models.ScanResult) {
 			//fmt.Printf("comparing: %v\n to %v\n", sig, result.Description)
 			if sig == strings.TrimSuffix(result.Description, " FOUND") {
 				log.Printf("User %v matched blacklist for %v:", scanRes.UserName, reason)
-				if strings.HasPrefix(config.ClusterName, "starter") {
+				if strings.HasPrefix(config.ClusterUUID, "starter") { // deprecated, needs replacing if needed again, as UUID will never eval to ^starter-
 					BanUser(scanRes.UserName, reason)
 					return
 				}

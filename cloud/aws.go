@@ -37,7 +37,7 @@ func UploadScanLog(sRes models.ScanResult) {
 	})
 
 	uploader := s3manager.NewUploader(sess)
-	filename := time.Now().Format("2006-02-01") + "/" + config.ClusterName + "/" + sRes.UserName + "/" + sRes.PodName
+	filename := time.Now().Format("2006-02-01") + "/" + config.ClusterUUID + "/" + sRes.UserName + "/" + sRes.PodName
 	jsonStr, err := json.Marshal(sRes)
 	if err != nil {
 		log.Println("UploadScanLog: Error marshalling json: ", err)
