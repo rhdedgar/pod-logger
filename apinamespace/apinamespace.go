@@ -22,16 +22,16 @@ type Spec struct {
 	Finalizers []string `json:"finalizers"`
 }
 
-type Status struct {
+type PhaseStatus struct {
 	Phase string `json:"phase"`
 }
 
 type APINamespace struct {
-	Kind       string   `json:"kind"`
-	APIVersion string   `json:"apiVersion"`
-	Metadata   Metadata `json:"metadata"`
-	Spec       Spec     `json:"spec"`
-	Status     Status   `json:"status"`
+	Kind       string      `json:"kind"`
+	APIVersion string      `json:"apiVersion"`
+	Metadata   Metadata    `json:"metadata"`
+	Spec       Spec        `json:"spec"`
+	Status     PhaseStatus `json:"status"`
 }
 
 type Labels struct {

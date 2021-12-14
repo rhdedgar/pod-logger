@@ -19,12 +19,16 @@ package cloud
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/rhdedgar/pod-logger/config"
 	"github.com/rhdedgar/pod-logger/models"
@@ -53,4 +57,39 @@ func UploadScanLog(sRes models.ScanResult) {
 	if err != nil {
 		log.Printf("Unable to upload %q to %q, %v", filename, config.AppSecrets.LogBucketName, err)
 	}
+}
+
+// DynamoDBPutItem takes an interface (pod creation log, scan result, etc.) and uploads it to the DynamoDBTable.
+func DynamoDBPutItem(dynamoDBItem interface{}) error {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(config.AppSecrets.LogBucketRegion),
+		Credentials: credentials.NewStaticCredentials(
+			config.AppSecrets.DynamoDBKeyID,
+			config.AppSecrets.DynamoDBKey,
+			""),
+	})
+	if err != nil {
+		return fmt.Errorf("error creating initial session: %v\n", err)
+	}
+
+	svc := dynamodb.New(sess)
+
+	dMM, err := dynamodbattribute.MarshalMap(dynamoDBItem)
+	if err != nil {
+		return fmt.Errorf("failed to DynamoDB marshal record, %v\n", err)
+	}
+
+	_, err = svc.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(config.AppSecrets.DynamoDBTable),
+		Item:      dMM,
+	})
+
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			return fmt.Errorf("aerr was not nil: %v\n", aerr.Error())
+		}
+		return fmt.Errorf("some other error occurred %v\n", err.Error())
+	}
+
+	return nil
 }

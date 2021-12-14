@@ -83,7 +83,7 @@ type ManagedFields struct {
 	Time        time.Time `json:"time"`
 	Subresource string    `json:"subresource,omitempty"`
 }
-type Metadata struct {
+type CVMetadata struct {
 	CreationTimestamp time.Time       `json:"creationTimestamp"`
 	Generation        int             `json:"generation"`
 	ManagedFields     []ManagedFields `json:"managedFields"`
@@ -99,7 +99,7 @@ type Spec struct {
 type Conditions struct {
 	LastTransitionTime time.Time `json:"lastTransitionTime"`
 	Message            string    `json:"message,omitempty"`
-	Status             string    `json:"status"`
+	CVStatus           string    `json:"status"`
 	Type               string    `json:"type"`
 }
 type Desired struct {
@@ -116,7 +116,7 @@ type History struct {
 	Verified       bool      `json:"verified"`
 	Version        string    `json:"version"`
 }
-type Status struct {
+type CVStatus struct {
 	AvailableUpdates   interface{}  `json:"availableUpdates"`
 	Conditions         []Conditions `json:"conditions"`
 	Desired            Desired      `json:"desired"`
@@ -125,9 +125,9 @@ type Status struct {
 	VersionHash        string       `json:"versionHash"`
 }
 type Items struct {
-	APIVersion string   `json:"apiVersion"`
-	Kind       string   `json:"kind"`
-	Metadata   Metadata `json:"metadata"`
-	Spec       Spec     `json:"spec"`
-	Status     Status   `json:"status"`
+	APIVersion string     `json:"apiVersion"`
+	Kind       string     `json:"kind"`
+	Metadata   CVMetadata `json:"metadata"`
+	Spec       Spec       `json:"spec"`
+	Status     CVStatus   `json:"status"`
 }

@@ -72,11 +72,6 @@ func init() {
 		log.Println(err)
 	}
 
-	err = GetClusterID()
-	if err != nil {
-		log.Println(err)
-	}
-
 	fileBytes, err := ioutil.ReadFile(tokenPath)
 	if err != nil {
 		log.Println("Error loading service account token file: ", err)
@@ -89,6 +84,10 @@ func init() {
 		log.Println("Secrets were not loaded, application will fail.")
 	}
 
+	err = GetClusterID()
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // getClusterID GETs the ID of the cluster from the OpenShift API.
@@ -103,12 +102,13 @@ func GetClusterID() error {
 		return fmt.Errorf("Error getting clusterversion info: %v \n", err)
 	}
 
-	_, err = client.MakeClient(reqCV, &cvDef)
+	_, err = client.MakeClient(reqCV, &cvDef, AppSecrets.OAPIToken)
 	if err != nil {
 		return fmt.Errorf("Error making pod request client: %v \n", err)
 	}
+
 	if len(cvDef.Items) > 0 {
-		ClusterUUID = cvDef.Items[0].Spec.ClusterID
+		AppSecrets.ClusterUUID = cvDef.Items[0].Spec.ClusterID
 		return nil
 	}
 	return fmt.Errorf("Error getting ClusterVersion info from the OAPI server URL, cvDef.Items len was 0")

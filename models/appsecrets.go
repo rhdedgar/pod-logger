@@ -44,5 +44,11 @@ type AppSecrets struct {
 	UserWhitelist []string `json:"user_whitelist"`
 	// ClusterID matches the clusterID field of our clusterversion object. Useful for identification in multi-cluster setups.
 	// oc get clusterversion -o jsonpath='{.items[].spec.clusterID}{"\n"}'
-	ClusterID string `json:"cluster_id"`
+	ClusterUUID string `json:"cluster_uuid"`
+	// DynamoDBKeyID is the IAM API key ID with write access to our log storage table.
+	DynamoDBKeyID string `json:"dynamodb_user"`
+	// DynamoDBUser is the IAM API secret key with write access to our log storage table.
+	DynamoDBKey string `json:"dynamodb_key"`
+	// DynamoDBTable is the storage table for pod creation logs and scan logs.
+	DynamoDBTable string `json:"dynamodb_table"`
 }

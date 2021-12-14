@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/rhdedgar/pod-logger/config"
 )
 
 var (
@@ -40,10 +38,10 @@ var (
 	}
 )
 
-// MakeClient takes an HTTP request and a destination struct to store the json results.
+// MakeClient takes an HTTP request, a destination struct to store the json results, and an access token.
 // Uses a custom HTTP transport to accommodate OpenShift clusters with self-signed certificates.
-func MakeClient(req *http.Request, ds interface{}) (int, error) {
-	req.Header.Set("Authorization", "Bearer "+config.AppSecrets.OAPIToken)
+func MakeClient(req *http.Request, ds interface{}, tok string) (int, error) {
+	req.Header.Set("Authorization", "Bearer "+tok)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 

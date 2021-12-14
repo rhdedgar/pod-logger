@@ -71,7 +71,7 @@ var _ = Describe("Client", func() {
 				req, err := http.NewRequest("POST", targetAPI, nil)
 				Expect(err).To(BeNil())
 
-				status, err := MakeClient(req, &recJSON)
+				status, err := MakeClient(req, &recJSON, "")
 
 				Expect(err).To(BeNil())
 				Expect(status).To(Equal(200))

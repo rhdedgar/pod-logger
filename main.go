@@ -19,12 +19,12 @@ package main
 import (
 	"os"
 
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/rhdedgar/pod-logger/routers"
 )
 
 func main() {
-	// Pod-logger V0.0.11
+	// Pod-logger V0.0.12
 
 	e := routers.Routers
 	e.HideBanner = true

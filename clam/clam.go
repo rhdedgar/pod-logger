@@ -109,7 +109,7 @@ func DeleteNS(ns string) (int, error) {
 		return 0, err
 	}
 
-	status, err := client.MakeClient(req, &recJSON)
+	status, err := client.MakeClient(req, &recJSON, config.AppSecrets.OAPIToken)
 	if err != nil {
 		log.Printf("Error making delete request client: %v \n", err)
 		return 0, err

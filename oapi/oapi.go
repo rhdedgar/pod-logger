@@ -32,6 +32,7 @@ import (
 	"github.com/rhdedgar/pod-logger/apipod"
 	"github.com/rhdedgar/pod-logger/clam"
 	"github.com/rhdedgar/pod-logger/client"
+	"github.com/rhdedgar/pod-logger/cloud"
 	"github.com/rhdedgar/pod-logger/docker"
 
 	"net/http"
@@ -96,7 +97,9 @@ func PrepClamInfo(scanResult models.ScanResult) {
 	}
 
 	scanResult.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
+
 	//go cloud.UploadScanLog(scanResult)
+	cloud.DynamoDBPutItem(scanResult)
 
 	scanLogMX.Lock()
 	defer scanLogMX.Unlock()
@@ -134,7 +137,7 @@ func GetInfo(podNs, podName string) (apinamespace.APINamespace, apipod.APIPod, e
 		return nsDef, podDef, fmt.Errorf("Error getting pod info: %v \n", err)
 	}
 
-	_, err = client.MakeClient(reqPod, &podDef)
+	_, err = client.MakeClient(reqPod, &podDef, config.AppSecrets.OAPIToken)
 	if err != nil {
 		return nsDef, podDef, fmt.Errorf("Error making pod request client: %v \n", err)
 	}
@@ -145,7 +148,7 @@ func GetInfo(podNs, podName string) (apinamespace.APINamespace, apipod.APIPod, e
 		return nsDef, podDef, fmt.Errorf("Error getting pod info: %v \n", err)
 	}
 
-	_, err = client.MakeClient(reqNs, &nsDef)
+	_, err = client.MakeClient(reqNs, &nsDef, config.AppSecrets.OAPIToken)
 	if err != nil {
 		return nsDef, podDef, fmt.Errorf("Error making NS request client: %v\n", err)
 	}
@@ -166,6 +169,8 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 		UID:       nsDef.Metadata.UID,
 	}
 	log.Printf("%+v", mLog)
+
+	cloud.DynamoDBPutItem(mLog)
 
 	podLogMX.Lock()
 	defer podLogMX.Unlock()
