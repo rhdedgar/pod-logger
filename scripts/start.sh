@@ -12,4 +12,4 @@ if [ "$OO_PAUSE_ON_START" = "true" ] ; then
   done
 fi
 
-/bin/pod-logger
+/usr/local/bin/pod-logger

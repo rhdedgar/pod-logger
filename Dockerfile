@@ -1,29 +1,23 @@
-# /usr/local/bin/start.sh will start the service
+# begin build container definition
+FROM registry.access.redhat.com/ubi8/ubi-minimal as build
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal
-
-# Pause indefinitely if asked to do so.
-ARG OO_PAUSE_ON_BUILD
-RUN test "$OO_PAUSE_ON_BUILD" = "true" && while sleep 10; do true; done || :
-
-ADD scripts/ /usr/local/bin/
-
-RUN microdnf install -y golang \
-                   gcc \
-                   git && \
-    microdnf clean all
+# Install golang
+RUN microdnf install -y golang
 
 ENV GOBIN=/bin \
     GOPATH=/go
 
-RUN go get github.com/rhdedgar/pod-logger && \
-    cd /go/src/github.com/rhdedgar/pod-logger && \
-    go install && \
-    cd && \
-    mkdir -p /host/var/log && \
-    rm -rf /go
+# install pod-logger
+RUN /usr/bin/go install github.com/rhdedgar/pod-logger@master
+
+
+# begin run container definition
+FROM registry.access.redhat.com/ubi8/ubi-minimal as run
+
+ADD scripts/ /usr/local/bin/
+
+COPY --from=build /bin/pod-logger /usr/local/bin
 
 EXPOSE 8080
 
-# Start processes
 CMD /usr/local/bin/start.sh
