@@ -19,13 +19,13 @@ package models
 import "time"
 
 type Log struct {
-	User      string
-	Namespace string
-	PodName   string
-	HostIP    string
-	PodIP     string
-	StartTime time.Time
-	UID       string
+	User      string    `json:"user"`
+	Namespace string    `json:"namespace"`
+	PodName   string    `json:"podName"`
+	HostIP    string    `json:"hostIP"`
+	PodIP     string    `json:"podIP"`
+	StartTime time.Time `json:"startTime"`
+	UUID      string    `json:"uuid"`
 }
 
 type Metadata struct {

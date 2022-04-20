@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	. "github.com/onsi/ginkgo"
@@ -95,7 +96,7 @@ var _ = Describe("Oapi", func() {
 					HostIP:    "10.10.10.10",
 					PodIP:     "10.10.10.11",
 					StartTime: time.Now(),
-					UID:       "testuid",
+					UUID:      uuid.NewString(),
 				})
 
 				Expect(err).To(BeNil())

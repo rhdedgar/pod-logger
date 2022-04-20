@@ -32,7 +32,6 @@ import (
 	"github.com/rhdedgar/pod-logger/apipod"
 	"github.com/rhdedgar/pod-logger/clam"
 	"github.com/rhdedgar/pod-logger/client"
-	"github.com/rhdedgar/pod-logger/cloud"
 	"github.com/rhdedgar/pod-logger/docker"
 
 	"net/http"
@@ -97,9 +96,6 @@ func PrepClamInfo(scanResult models.ScanResult) {
 	}
 
 	scanResult.UserName = nsInfo.Metadata.Annotations.OpenshiftIoRequester
-
-	//go cloud.UploadScanLog(scanResult)
-	cloud.DynamoDBPutItem(scanResult)
 
 	scanLogMX.Lock()
 	defer scanLogMX.Unlock()
@@ -166,11 +162,9 @@ func prepLog(podName, podNs string, podDef apipod.APIPod, nsDef apinamespace.API
 		HostIP:    podDef.Status.HostIP,
 		PodIP:     podDef.Status.PodIP,
 		StartTime: podDef.Status.StartTime,
-		UID:       nsDef.Metadata.UID,
+		UUID:      nsDef.Metadata.UID,
 	}
 	log.Printf("%+v", mLog)
-
-	cloud.DynamoDBPutItem(mLog)
 
 	podLogMX.Lock()
 	defer podLogMX.Unlock()

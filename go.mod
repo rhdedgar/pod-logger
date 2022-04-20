@@ -3,7 +3,7 @@ module github.com/rhdedgar/pod-logger
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.42.22
+	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
